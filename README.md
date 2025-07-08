@@ -194,11 +194,10 @@ All dashboards show live statistics:
 
 1. **Start fresh** - Clear browser data if needed
 2. **Register as applicant** - Create new account
-3. **Login as admin** - Use admin@ncas.org / admin123
-4. **Approve user** - See real-time notification and approve
-5. **Submit grant** - Login as approved applicant and submit
-6. **Review grant** - Login as manager and see real-time update
-7. **Approve grant** - Make decision and see instant status change
+3. **Approve user** - See real-time notification and approve
+4. **Submit grant** - Login as approved applicant and submit
+5. **Review grant** - Login as manager and see real-time update
+6. **Approve grant** - Make decision and see instant status change
 
 ## 🎯 Production Ready
 
