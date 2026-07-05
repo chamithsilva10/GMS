@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { SearchBar } from "@/components/ui/search-bar"
 import { DataAnalytics } from "@/components/ui/data-analytics"
 import { AuditTrail } from "@/components/ui/audit-trail"
@@ -24,6 +26,13 @@ import {
 } from "lucide-react"
 import { GrantDetailsModal } from "@/components/ui/grant-details-modal"
 
+const reviewers = [
+  { id: "1", name: "Dr. Sarah Johnson", expertise: "Research & Development" },
+  { id: "2", name: "Prof. Michael Chen", expertise: "Technology & Innovation" },
+  { id: "3", name: "Dr. Emily Rodriguez", expertise: "Environmental Science" },
+  { id: "4", name: "Prof. David Thompson", expertise: "Business & Economics" },
+]
+
 export default function AdminDashboard() {
   const [user, setUser] = useState<any>(null)
   const [users, setUsers] = useState<any[]>([])
@@ -33,6 +42,8 @@ export default function AdminDashboard() {
   const { addNotification } = useNotifications()
   const [selectedGrant, setSelectedGrant] = useState<any>(null)
   const [isGrantModalOpen, setIsGrantModalOpen] = useState(false)
+  const [reviewerGrant, setReviewerGrant] = useState<any>(null)
+  const [selectedReviewerId, setSelectedReviewerId] = useState("")
 
   useEffect(() => {
     // Check if user is logged in
@@ -114,6 +125,16 @@ export default function AdminDashboard() {
     setIsGrantModalOpen(true)
   }
 
+  const handleOpenReviewerDialog = (grant: any) => {
+    setReviewerGrant(grant)
+    setSelectedReviewerId(grant.reviewer || "")
+  }
+
+  const handleCloseReviewerDialog = () => {
+    setReviewerGrant(null)
+    setSelectedReviewerId("")
+  }
+
   // Handler to assign reviewer
   const handleAssignReviewer = (grantId: string, reviewerId: string) => {
     const updatedGrants = grants.map((g) =>
@@ -121,6 +142,18 @@ export default function AdminDashboard() {
     )
     setGrants(updatedGrants)
     localStorage.setItem("ncas_grants", JSON.stringify(updatedGrants))
+  }
+
+  const handleConfirmReviewerAssignment = () => {
+    if (!reviewerGrant || !selectedReviewerId) return
+
+    handleAssignReviewer(reviewerGrant.id, selectedReviewerId)
+    addNotification({
+      type: "success",
+      title: "Reviewer Assigned",
+      message: "Reviewer has been successfully assigned to this grant application.",
+    })
+    handleCloseReviewerDialog()
   }
 
   // Handler to update grant status
@@ -520,7 +553,7 @@ export default function AdminDashboard() {
 
                           <div className="mt-3 sm:mt-4 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                             <Button size="sm" onClick={() => handleViewDetails(grant)} className="text-xs">View Details</Button>
-                            <Button size="sm" variant="outline" onClick={() => handleAssignReviewer(grant.id, prompt('Enter Reviewer ID:'))} className="text-xs">
+                            <Button size="sm" variant="outline" onClick={() => handleOpenReviewerDialog(grant)} className="text-xs">
                               Assign Reviewer
                             </Button>
                           </div>
@@ -537,6 +570,45 @@ export default function AdminDashboard() {
                     onAssignReviewer={handleAssignReviewer}
                     onUpdateStatus={handleUpdateGrantStatus}
                   />
+
+                  <Dialog open={!!reviewerGrant} onOpenChange={(open) => (open ? null : handleCloseReviewerDialog())}>
+                    <DialogContent className="sm:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Assign Reviewer</DialogTitle>
+                        <DialogDescription>
+                          Choose a reviewer for {reviewerGrant?.title || "this grant application"}.
+                        </DialogDescription>
+                      </DialogHeader>
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700">Reviewer</label>
+                        <Select value={selectedReviewerId} onValueChange={setSelectedReviewerId}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a reviewer" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {reviewers.map((reviewer) => (
+                              <SelectItem key={reviewer.id} value={reviewer.id}>
+                                <div>
+                                  <div className="font-medium">{reviewer.name}</div>
+                                  <div className="text-xs text-gray-500">{reviewer.expertise}</div>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <DialogFooter>
+                        <Button type="button" variant="outline" onClick={handleCloseReviewerDialog}>
+                          Cancel
+                        </Button>
+                        <Button type="button" onClick={handleConfirmReviewerAssignment} disabled={!selectedReviewerId}>
+                          Assign Reviewer
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
                 </div>
               </CardContent>
             </Card>
