@@ -64,31 +64,34 @@ export function FileUpload({
     setUploading(true)
     setUploadProgress(0)
 
+    const filesToUpload = [...files]
+    let progress = 0
+
     // Simulate upload progress
     const interval = setInterval(() => {
-      setUploadProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval)
-          setUploading(false)
-          onFileUpload(files)
+      progress = Math.min(progress + 10, 100)
+      setUploadProgress(progress)
 
-          // Store files in localStorage for demo
-          const existingFiles = JSON.parse(localStorage.getItem("ncas_documents") || "[]")
-          const newDocuments = files.map((file) => ({
-            id: Date.now() + Math.random(),
-            name: file.name,
-            size: file.size,
-            type: file.type,
-            uploadedAt: new Date().toISOString(),
-            uploadedBy: JSON.parse(localStorage.getItem("ncas_current_user") || "{}").id,
-          }))
-          localStorage.setItem("ncas_documents", JSON.stringify([...existingFiles, ...newDocuments]))
+      if (progress >= 100) {
+        clearInterval(interval)
+        setUploading(false)
 
-          setFiles([])
-          return 100
-        }
-        return prev + 10
-      })
+        onFileUpload(filesToUpload)
+
+        // Store files in localStorage for demo
+        const existingFiles = JSON.parse(localStorage.getItem("ncas_documents") || "[]")
+        const newDocuments = filesToUpload.map((file) => ({
+          id: Date.now() + Math.random(),
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          uploadedAt: new Date().toISOString(),
+          uploadedBy: JSON.parse(localStorage.getItem("ncas_current_user") || "{}").id,
+        }))
+        localStorage.setItem("ncas_documents", JSON.stringify([...existingFiles, ...newDocuments]))
+
+        setFiles([])
+      }
     }, 200)
   }
 
@@ -128,7 +131,7 @@ export function FileUpload({
                 <span className="text-sm">{file.name}</span>
                 <span className="text-xs text-gray-500">({(file.size / 1024 / 1024).toFixed(2)} MB)</span>
               </div>
-              <button onClick={() => removeFile(index)} className="text-red-500 hover:text-red-700">
+              <button type="button" onClick={() => removeFile(index)} className="text-red-500 hover:text-red-700">
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -141,7 +144,7 @@ export function FileUpload({
             </div>
           )}
 
-          <Button onClick={uploadFiles} disabled={uploading} className="w-full">
+          <Button type="button" onClick={uploadFiles} disabled={uploading} className="w-full">
             {uploading ? "Uploading..." : `Upload ${files.length} file(s)`}
           </Button>
         </div>
